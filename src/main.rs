@@ -2,74 +2,70 @@
 #![allow(non_snake_case)]
 
 use macroquad::prelude::*;
+use macroquad::ui::{hash, root_ui, widgets};
 use std::f32::consts::PI;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 mod robot;
 mod util;
-const MAX_VEL: f32 = 4.0;
+mod ui;
+mod movement;
+mod driver;
+use std::thread;
+
 
 #[macroquad::main("Events")]
 async fn main() {
-    let mut robot = robot::Robot {
+    let robot = Arc::new(Mutex::new(robot::Robot {
         position: (100.0, 100.0),
         heading: 0.0,
-    };
+    }));
     let mut vel : (f32, f32) = (0.0,0.0);
+    let mut ui = ui::Ui::new();
+    let mut autonStarted = false;
+
+    let lCons = util::PidConstants{
+        p: 0.03,
+        i: 0.0,
+        d: 0.0,
+        tolerance: 0.0,
+        integralThreshold: 0.0,
+        maxIntegral: 0.0
+    };
+
+    let rCons = util::PidConstants{
+        p: 0.015,
+        i: 0.0,
+        d: 0.0,
+        tolerance: 0.0,
+        integralThreshold: 0.0,
+        maxIntegral: 0.0
+    };
+
     loop {
         clear_background(WHITE);
-        robot.render();
-        println!("{:?}", robot.position);
+        let robot = Arc::clone(&robot);
 
-        // if is_key_down(KeyCode::W) { 
-        //     robot.position.1 -= 1.0;
-        // }
-        // if is_key_down(KeyCode::A) { 
-        //     robot.position.0 -= 1.0;
-        // }
-        // if is_key_down(KeyCode::S) { 
-        //     robot.position.1 += 1.0;
-        // }
-        // if is_key_down(KeyCode::D) { 
-        //     robot.position.0 += 1.0;
-        // }
-        // if is_key_down(KeyCode::L) { 
-        //     robot.heading += 0.05;
-        // }
-        // if is_key_down(KeyCode::K) { 
-        //     robot.heading -= 0.05;
-        // }
-        
-
-        let absv = vel.0.abs();
-        let absv1 = vel.1.abs();
-        let sgnv = vel.0.signum();
-        let sgnv1 = vel.1.signum();
-
-        if absv > MAX_VEL {
-            vel.0 = MAX_VEL * sgnv
-        }
-        if absv1 > MAX_VEL {
-            vel.1 = MAX_VEL * sgnv1
+        {
+            robot.lock().unwrap().render();
         }
 
-        vel.0 = if absv > 0.07 {vel.0 - sgnv * 0.07} else {0.0};
-        vel.1 = if absv1 > 0.07 {vel.1 - sgnv1 * 0.07} else {0.0};
+        thread::sleep(Duration::from_millis(10));
 
-        robot.step(vel);
+        if ui.state() == ui::State::Driver {
+            driver::drive(&mut vel, &mut robot.lock().unwrap());
+            autonStarted = false;
+        }
+
+        if ui.state() == ui::State::Auton {
+            if !autonStarted {
+                autonStarted = true;
+                thread::spawn(move || {
+                    movement::pidMTP(robot, (screen_width() / 2.0, screen_height() / 2.0), 0.0, 2000, lCons, rCons);
+                });
+            }
+        }
+        ui.render();
         next_frame().await; 
-
-        if is_key_down(KeyCode::W) { 
-            vel.0 += 0.2;
-            vel.1 += 0.2;
-        }
-        if is_key_down(KeyCode::A) { 
-            vel.1 += 0.2 * -sgnv1;
-        }
-        if is_key_down(KeyCode::S) { 
-            vel.0 -= 0.2;
-            vel.1 -= 0.2;
-        }
-        if is_key_down(KeyCode::D) { 
-            vel.0 += 0.2 * -sgnv;
-        }
     }
 }
