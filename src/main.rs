@@ -42,15 +42,25 @@ async fn main() {
         maxIntegral: 0.0
     };
 
+    let mut points: Vec<(f32, f32)> = Vec::new();
+    let mut pos: (f32, f32) = (0.0,0.0);
     loop {
         clear_background(WHITE);
         let robot = Arc::clone(&robot);
 
         {
             robot.lock().unwrap().render();
+            pos = robot.lock().unwrap().position;
         }
 
         thread::sleep(Duration::from_millis(10));
+        points.push(pos);
+
+        let mut prev = points[0];
+        for point in &points {
+            draw_line(point.0, point.1, prev.0, prev.1,  3.0, BLACK);
+            prev = *point;
+        }
 
         if ui.state() == ui::State::Driver {
             driver::drive(&mut vel, &mut robot.lock().unwrap());

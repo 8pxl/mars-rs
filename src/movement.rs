@@ -1,3 +1,5 @@
+use macroquad::shapes::draw_circle;
+
 use crate::robot;
 use crate::util;
 use std::sync::{Arc, Mutex};
@@ -7,10 +9,11 @@ use std::time::{Duration, Instant};
 
 pub fn pidMTPVel(position: (f32, f32), heading: f32, target: (f32, f32), rotationBias: f32,  lCont: &mut util::Pid, rCont: &mut util::Pid) -> (f32, f32) {
     let linearError = util::dist(position,target);
-    let targetHeading = util::absoluteAngleToPoint(position, target).to_degrees();
+    let targetHeading = util::absoluteAngleToPoint(position, target).to_degrees() + 90.0;
     let rotationError = util::minError(targetHeading, heading.to_degrees());
-    let cre = if rotationError.abs() > 90.0 {0.1} else {rotationError.to_radians().cos()};
+    let cre = if rotationError.abs() > 90.0 {0.0} else {rotationError.to_radians().cos()};
     let angularVel = rCont.out(rotationError);
+    println!("{}", rotationError);
     let linearVel = cre * lCont.out(linearError);
     let rVel = (linearVel - (angularVel.abs() * rotationBias)) + angularVel;
     let lVel = (linearVel - (angularVel.abs() * rotationBias)) - angularVel;
@@ -28,10 +31,10 @@ pub fn pidMTP(robot: Arc<Mutex<robot::Robot>>, target: (f32, f32), rotationBias:
             let mut robot = robot.lock().unwrap();
             let pos = robot.position;
             let heading = robot.heading;
-            // robot.step(pidMTPVel(pos, heading, target, rotationBias, &mut lCont, &mut rCont));
-            let vel = rCont.out(util::minError(heading.to_degrees(), 90.0));
-            println!("{}", heading.to_degrees());
-            robot.step((-vel,vel));
+            robot.step(pidMTPVel(pos, heading, target, rotationBias, &mut lCont, &mut rCont));
+            // let vel = rCont.out(util::minError(heading.to_degrees(), util::absoluteAngleToPoint(pos, target).to_degrees() + 90.0));
+            // use macroquad::prelude::BLACK;
+            // robot.step((-vel,vel));
         }
 
         thread::sleep(Duration::from_millis(10));

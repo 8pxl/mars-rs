@@ -75,7 +75,7 @@ pub fn dist(a: (f32, f32), b: (f32, f32)) -> f32{
 }
 
 pub fn absoluteAngleToPoint(p1: (f32, f32), p2: (f32, f32)) -> f32{
-    (p2.0 - p1.0).atan2(p2.1 - p1.1)
+ (p2.1 - p1.1).atan2(p2.0 - p1.0)
 }
 
 pub fn dirToSpin(target: f32, current: f32) -> i16{
