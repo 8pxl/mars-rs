@@ -65,13 +65,16 @@ async fn main() {
         if ui.state() == ui::State::Driver {
             driver::drive(&mut vel, &mut robot.lock().unwrap());
             autonStarted = false;
+            // let heading = (robot.lock().unwrap().heading.to_degrees()) % 360.0;
+            // println!("{}",  if heading < 0.0 {360.0 + heading} else {heading});
+            // draw_circle(screen_width()/2.0, screen_height()/2.0, 3.0, BLACK);
         }
 
         if ui.state() == ui::State::Auton {
             if !autonStarted {
                 autonStarted = true;
                 thread::spawn(move || {
-                    movement::pidMTP(robot, (screen_width() / 2.0, screen_height() / 2.0), 0.0, 2000, lCons, rCons);
+                    movement::pidMTP(robot, (screen_width() / 2.0, screen_height() / 2.0), 115.0, 2000, lCons, rCons);
                 });
             }
         }

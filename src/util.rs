@@ -76,7 +76,9 @@ pub fn dist(a: (f32, f32), b: (f32, f32)) -> f32{
 }
 
 pub fn absoluteAngleToPoint(p1: (f32, f32), p2: (f32, f32)) -> f32{
- (p2.1 - p1.1).atan2(p2.0 - p1.0)
+    use std::f32::consts::PI;
+    let c = (p2.1 - p1.1).atan2(p2.0 - p1.0) * 180.0/PI + 90.0;
+    if c < 0.0 {360.0 + c} else {c}
 }
 
 pub fn dirToSpin(target: f32, current: f32) -> i16{
@@ -89,8 +91,8 @@ pub fn minError(target: f32, current: f32) -> f32 {
     let b = target.max(current);
     let s = target.min(current);
     let diff = b - s;
-    
-    if diff <= 180.0 {diff} else {((360.0-b) + s) * dirToSpin(target, current) as f32}
+    let dir = dirToSpin(target, current) as f32;
+    if diff <= 180.0 {diff * dir} else {((360.0-b) + s) * dir}
 }
 
 pub(crate) use rotate;
