@@ -1,4 +1,5 @@
 use macroquad::shapes::draw_circle;
+use macroquad::shapes::draw_line;
 
 use crate::robot;
 use crate::util;
@@ -7,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-
+//https://www.desmos.com/calculator/vhte05bsot for scaling
 pub fn pidMTPVel(position: (f32, f32), heading: f32, target: (f32, f32), rotationCut: f32,  lCont: &mut util::Pid, rCont: &mut util::Pid) -> (f32, f32) {
     let linearError = util::dist(position,target);
     let targetHeading = util::absoluteAngleToPoint(position, target);
@@ -21,7 +22,7 @@ pub fn pidMTPVel(position: (f32, f32), heading: f32, target: (f32, f32), rotatio
     (lVel, rVel)
 }
 
-pub fn pidMTP(robot: Arc<Mutex<robot::Robot>>, target: (f32, f32), rotationCut: f32, timeout: u16, lConstants: util::PidConstants, rConstants: util::PidConstants) {
+pub fn pidMTP(robot: &Arc<Mutex<robot::Robot>>, target: (f32, f32), rotationCut: f32, timeout: u16, lConstants: util::PidConstants, rConstants: util::PidConstants) {
     let start = Instant::now();
     let mut lCont = util::Pid::new(lConstants);
     let mut rCont = util::Pid::new(rConstants);
@@ -33,6 +34,29 @@ pub fn pidMTP(robot: Arc<Mutex<robot::Robot>>, target: (f32, f32), rotationCut: 
             robot.step(pidMTPVel(pos, heading, target, rotationCut, &mut lCont, &mut rCont));
         }
 
+        thread::sleep(Duration::from_millis(10));
+    }
+}
+
+pub fn boomerang(robot: &Arc<Mutex<robot::Robot>>, target: (f32, f32), timeout: u16, dLead: f32, thetaEnd: f32, rotationCut: f32, lConstants: util::PidConstants, rConstants: util::PidConstants)
+{
+    let start = Instant::now();
+    let mut lCont = util::Pid::new(lConstants);
+    let mut rCont = util::Pid::new(rConstants);
+
+    while start.elapsed().as_millis() < timeout.into() {
+        {
+            let mut robot = robot.lock().unwrap();
+            let pos = robot.position;
+            let heading = robot.heading.to_degrees() % 360.0;
+            let h = (pos.0 - target.0).hypot(pos.1 - target.1);
+            let carrot = (target.0 - (h * thetaEnd.sin() * dLead), target.1 - (h * thetaEnd.cos() * dLead));
+            use macroquad::prelude::RED;
+            use macroquad::prelude::BLACK;
+            draw_line(pos.0,pos.1,carrot.0, carrot.1, 2.0, RED);
+            draw_circle(target.0, target.1, 1.0, BLACK);
+            robot.step(pidMTPVel(pos, heading, carrot, rotationCut, &mut lCont, &mut rCont));
+        }
         thread::sleep(Duration::from_millis(10));
     }
 }
