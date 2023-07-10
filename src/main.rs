@@ -75,6 +75,7 @@ async fn main() {
                 });
             }
         }
+
         ui.render();
         next_frame().await; 
     }

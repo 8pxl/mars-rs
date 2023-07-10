@@ -13,10 +13,10 @@ pub fn pidMTPVel(position: (f32, f32), heading: f32, target: (f32, f32), rotatio
     let rotationError = util::minError(targetHeading, heading.to_degrees());
     let cre = if rotationError.abs() > 90.0 {0.0} else {rotationError.to_radians().cos()};
     let angularVel = rCont.out(rotationError);
-    println!("{}", rotationError);
+    println!("{}", targetHeading);
     let linearVel = cre * lCont.out(linearError);
-    let rVel = (linearVel - (angularVel.abs() * rotationBias)) + angularVel;
-    let lVel = (linearVel - (angularVel.abs() * rotationBias)) - angularVel;
+    let rVel = (linearVel - (angularVel.abs() * rotationBias)) - angularVel;
+    let lVel = (linearVel - (angularVel.abs() * rotationBias)) + angularVel;
     (lVel, rVel)
 }
 
@@ -37,6 +37,6 @@ pub fn pidMTP(robot: Arc<Mutex<robot::Robot>>, target: (f32, f32), rotationBias:
             // robot.step((-vel,vel));
         }
 
-        thread::sleep(Duration::from_millis(10));
+        thread::sleep(Duration::from_millis(100));
     }
 }
