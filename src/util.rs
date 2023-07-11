@@ -22,6 +22,13 @@ macro_rules! pub_struct {
     }
 }
 
+#[macro_export]
+macro_rules! hex {
+    ($x: expr) => {
+        Color::from_hex($x)
+    };
+}
+
 pub_struct!(PidConstants {
     p: f32,
     i: f32,

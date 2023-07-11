@@ -1,4 +1,4 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*, color};
 use std::f32::consts::PI;
 use crate::glam::{vec2, vec3, vec4, Mat4, Vec2};
 use crate::util;
@@ -15,9 +15,9 @@ impl Robot {
         let v2 = util::rotate![ROBOT_SIZE, ROBOT_SIZE, self.heading, self.position];
         let v3 = util::rotate![-ROBOT_SIZE, -ROBOT_SIZE, self.heading, self.position];
         let v4 = util::rotate![ROBOT_SIZE, -ROBOT_SIZE, self.heading, self.position];
-        draw_triangle(v1, v2, v3, BLACK);
-        draw_triangle(v3, v4, v2, BLACK);
-        draw_line(v3.x, v3.y, v4.x, v4.y, 3.0, RED);
+        draw_triangle(v1, v2, v3, Color::from_hex(0x6F2232));
+        draw_triangle(v3, v4, v2, Color::from_hex(0x6F2232));
+        draw_line(v3.x, v3.y, v4.x, v4.y, 4.0, Color::from_hex(0x950740));
     }
 
     pub fn step(&mut self, d: (f32, f32)) {
