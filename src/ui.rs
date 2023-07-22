@@ -22,7 +22,6 @@ pub struct Ui {
     state: State,
     pub path: Vec<(f32, f32)>,
     pub editing: i8,
-    pub filePath: String,
 }
 
 pub fn ft() -> f32 {
@@ -35,7 +34,6 @@ impl Ui {
             state: State::Driver,
             path: Vec::new(),
             editing: -1,
-            filePath: String::new(),
         }
     }
 
