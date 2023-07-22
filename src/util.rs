@@ -1,3 +1,5 @@
+use macroquad::prelude;
+
 #[macro_export]
 macro_rules! rotate {
     ($x: expr, $y: expr, $t: expr, $p: expr) => {
@@ -100,6 +102,26 @@ pub fn minError(target: f32, current: f32) -> f32 {
     let diff = b - s;
     let dir = dirToSpin(target, current) as f32;
     if diff <= 180.0 {diff * dir} else {((360.0-b) + s) * dir}
+}
+
+use macroquad::prelude::*;
+pub fn draw_arc_lines(center: Vec2, r: f32, start: f32, end: f32, thickness: f32, color: Color) {
+    let incr = (end - start) / 20.;
+    for i in 0..20 {
+        let a = center + polar_to_cartesian(r, start + i as f32 * incr);
+        let b = center + polar_to_cartesian(r, start + (i + 1) as f32 * incr);
+        draw_line(a.x, a.y, b.x, b.y, thickness, color);
+    }
+}
+
+pub fn draw_arc(center: Vec2, r: f32, start: f32, end: f32, color: Color) {
+    // let center = vec2(center.0, center.1);
+    let incr = (end - start) / 20.;
+    for i in 0..20 {
+        let a = center + polar_to_cartesian(r, start + i as f32 * incr);
+        let b = center + polar_to_cartesian(r, start + (i + 1) as f32 * incr);
+        draw_triangle(center, a, b, color);
+    }
 }
 
 pub(crate) use rotate;

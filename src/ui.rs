@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use macroquad::ui::{hash, root_ui, widgets};
+use macroquad::ui::{hash, root_ui, widgets, Skin};
 
 use crate::hex;
 
@@ -25,6 +25,10 @@ pub struct  Ui {
     pub path: Vec<(f32, f32)>,
     pub editing: i8,
     pub filePath: String,
+}
+
+pub fn ft() -> f32 {
+    screen_width().min(screen_height()) / 12.0
 }
 
 impl Ui{
@@ -76,4 +80,34 @@ impl Ui{
     pub fn set(&mut self, new: State) {
         self.state = new;
     }
+}
+
+pub fn setSkin() {
+    let editbox_style = root_ui().style_builder()
+    .color(Color::from_hex(0x1F182F))
+    .build();
+
+    let window_style = root_ui().style_builder()
+    .color(Color::from_hex(0x335c67))
+    .build();
+
+    let label_style = root_ui().style_builder()
+    .text_color(Color::from_hex(0x6F2232))
+    .build();
+
+    let button_style = root_ui().style_builder()
+    .color(hex!(0x221D2F))
+    .text_color(Color::from_hex(0x6F2232))
+    .color_hovered(hex!(0x332B45))
+    .build();
+
+    let skin = Skin {
+        editbox_style,
+        window_style,
+        button_style,
+        label_style,
+        ..root_ui().default_skin()
+    };
+
+    root_ui().push_skin(&skin); 
 }
