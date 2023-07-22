@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 macroquad = "0.3"
+rapier2d = { version = "0.17.2", features = ["simd-stable"] }
+nalgebra = {version = "0.32.3", features = ["convert-glam015"]}
