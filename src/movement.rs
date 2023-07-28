@@ -75,7 +75,7 @@ pub fn followPath(robot: &Arc<Mutex<robot::Robot>>, path: Vec<(f32,f32)>, timeou
             let target = path[pathIndex];
             let mut robot = robot.lock().unwrap();
             let pos = robot.position;
-            let thetaEnd = absoluteAngleToPoint(pos, target).to_radians();
+            let thetaEnd = absoluteAngleToPoint(path[if (pathIndex as i8 -1) < 0 {0} else {pathIndex-1}], target).to_radians();
             let heading = robot.heading.to_degrees() % 360.0;
             let h = (pos.0 - target.0).hypot(pos.1 - target.1);
             // println!("{}", h);
@@ -117,4 +117,151 @@ pub fn eulerTurn(robot: &Arc<Mutex<robot::Robot>>, theta: f32, rate: f32, curvat
         thread::sleep(Duration::from_millis(10));
     }
     return curvature;
+}
+
+enum TargetPoint {
+    Last((f32, f32)),
+    Other((f32, f32))
+}
+
+fn targetPoint(path: &Vec<(f32,f32)>, position: (f32, f32), lookAhead: f32, lineLookAhead: usize, lineIndex: usize) -> TargetPoint {
+    //lookAhead: radius of look ahead circle
+    //lineLookAhead: how many lines ahead of the path the robot should search
+    //lineIndex: the current line the robot is travelling on
+
+    let mut furthestPoint: (f32, f32);
+    let mut targetPoint = TargetPoint::Other((0.0, 0.0));
+    let mut closestDist = f32::INFINITY;
+
+    //lastLine: furthest line look ahead point
+    let lastLine = (lineIndex + lineLookAhead).min(path.len() - 1);
+    for i in lineIndex..lastLine {
+        furthestPoint = path[lastLine - 1];
+
+        let x1: f32 = path[i].0;
+        let y1: f32 = path[i].1;
+        let x2: f32 = path[i + 1].0;
+        let y2: f32 = path[i+1].1;
+
+        let ox1 = x1 - position.0;
+        let oy1 = y1 - position.1;
+        let ox2 = x2 - position.0;
+        let oy2 = y2 - position.1;
+
+        let dx = ox2 - ox1;
+        let dy = oy2 - oy1;
+        let dr = dx.hypot(dy);
+        let D = ox1*oy2 - ox2 * oy1; 
+        let discriminant = lookAhead.powi(2) * dr.powi(2) - D.powi(2);
+
+        if discriminant >= 0.0 {
+              let sDiscriminant = discriminant.sqrt();
+              let dxdy = D * dy;
+              let dxdx = D*dx;
+              let sdyxdxxsd = dy.signum() * dx * sDiscriminant;
+              let dr2 = dr.powi(2);
+              let adyxsd = dy.abs() * sDiscriminant;
+
+              let minX = x1.min(x2);
+              let maxX = x1.max(x2);
+              let minY = y1.min(y2);
+              let maxY = y1.max(y2);
+
+              let sx1 = (dxdy + sdyxdxxsd) / dr2;
+              let sy1 = (-dxdx + adyxsd) / dr2;
+              let sx2 = (dxdy - sdyxdxxsd) / dr2;
+              let sy2 = (-dxdx - adyxsd) / dr2;
+
+              let s1 = (sx1 + position.0, sy1 + position.1);
+              let s2 = (sx2 + position.0, sy2 + position.1);
+
+              let s1Valid = s1.0 >= minX && s1.0 <= maxX && s1.1 >= minY && s1.1 <= maxY;
+              let s2Valid = s2.0 >= minX && s2.0 <= maxX && s2.1 >= minY && s2.1 <= maxY;
+
+              //if the line index is the last line in the look aheaed, increase the line index
+              if (i == (lastLine - 1)) && (lastLine - 1 != path.len()) {
+                if s1Valid {
+                    return TargetPoint::Last(s1);
+                }
+
+                if s2Valid {
+                    return TargetPoint::Last(s2);
+                }
+              }
+
+              let s1Dist = util::dist(s1, furthestPoint);
+              let s2Dist = util::dist(s2, furthestPoint);
+
+              if s1Valid && s1Dist < closestDist {
+                targetPoint = TargetPoint::Other(s1);
+                closestDist = s1Dist;
+              }
+
+              if s2Valid && s2Dist < closestDist {
+                targetPoint  = TargetPoint::Other(s2);
+                closestDist = s2Dist;
+              }
+        }
+    }
+    targetPoint
+}
+
+pub fn moveToPurePursuit(robot: &Arc<Mutex<robot::Robot>>, path: Vec<(f32,f32)>, lookAhead: f32, lineLookAhead: usize, finalTimeout: u16) {
+    let mut lineIndex = 0;
+    let mut start = Instant::now();
+    let mut lCont = util::Pid::new(util::PidConstants {
+        p: 0.05,
+        i: 0.0,
+        d: 0.0,
+        tolerance: 0.0,
+        integralThreshold: 0.0,
+        maxIntegral: 0.0
+    });
+
+    let mut rCont = util::Pid::new(util::PidConstants {
+        p: 0.015,
+        i: 0.0,
+        d: 0.0,
+        tolerance: 0.0,
+        integralThreshold: 0.0,
+        maxIntegral: 0.0
+    });
+
+    while start.elapsed().as_millis() < finalTimeout.into() {
+        {
+            let mut robot = robot.lock().unwrap();
+            let pos = robot.position;
+            let last = path[path.len() - 1];
+            let target;
+            start = Instant::now();
+
+            if lineIndex == path.len() - 2 {
+                target = last;
+            }
+            
+            else {
+                let targ = targetPoint(&path, pos, lookAhead, lineLookAhead, lineIndex);
+                
+                match targ {
+                    TargetPoint::Last(point) => {
+                        lineIndex += 1;
+                        target = point;
+                    }
+                    
+                    TargetPoint::Other(point) => {
+                        target = point;
+                    }
+                }
+            }
+
+            let heading = robot.heading.to_degrees() % 360.0;
+            robot.step(pidMTPVel(pos, heading, target, 90.0, &mut lCont, &mut rCont, 0.0));
+            use macroquad::prelude::BLACK;
+            draw_line(pos.0, pos.1, target.0, target.1, 2.0, BLACK);
+        }
+
+        thread::sleep(Duration::from_millis(10));
+
+    }
+    // moveTo(path[-1],finalTimeout)
 }

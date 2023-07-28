@@ -55,17 +55,18 @@ async fn main() {
         width = screen_width();
         let height = screen_height();
 
-        points.push(pos);
-        let mut prev = points[0];
-        for point in &points {
-            draw_line(point.0, point.1, prev.0, prev.1,  3.0, BLACK);
-            prev = *point;
-        }
-        // let mut prev = path[0];
-        // for point in &path {
-        //     draw_line(point.0, point.1, prev.0, prev.1,  3.0, RED);
+        // points.push(pos);
+        // let mut prev = points[0];
+        // for point in &points {
+        //     draw_line(point.0, point.1, prev.0, prev.1,  3.0, BLACK);
         //     prev = *point;
         // }
+        let path = vec![(398.32422, 153.41406), (559.21094, 99.73828), (810.08594, 135.30078), (932.33984, 164.47266), (1003.5625, 239.64063), (991.8906, 394.1797), (903.0703, 482.3047), (853.76953, 604.375), (726.21094, 601.0117), (516.59375, 587.25), (504.28125, 469.16797)];
+        let mut prev = path[0];
+        for point in &path {
+            draw_line(point.0, point.1, prev.0, prev.1,  3.0, RED);
+            prev = *point;
+        }
 
         let robot = Arc::clone(&robot);
         {
@@ -86,10 +87,12 @@ async fn main() {
                     thread::spawn(move || {
                         // movement::pidMTP(&robot, (width / 2.0, height / 2.0), 115.0, 800, lCons, rCons, 10.0);
                         // movement::boomerang(&robot, (width - width / 8.0, height - height/ 6.0), 40000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
-                        movement::boomerang(&robot, (width/2.0, height/2.0), 5000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
+                        // movement::boomerang(&robot, (width/2.0, height/2.0), 5000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
                         // movement::eulerTurn(&robot, 0.0, -0.0002, movement::eulerTurn(&robot, 45.0, 0.0002, 0.0, 3000, 1, turnCons), 3000, -1, turnCons);
-                        // let path = vec![(94.38672, 101.21875), (316.25, 367.63672), (416.45703, 520.4297), (645.03516, 522.4297), (647.09375, 638.75), (966.8867, 491.9961), (1229.8438, 331.79297), (1218.7109, 191.0039), (1033.≥0742, 147.9336), (860.5, 277.73047), (845.53125, 110.87891), (623.3711, 123.828125), (576.3125, 297.67578), (497.1836, 187.41016), (384.39063, 123.94141), (304.07422, 156.35938), (258.46875, 81.24609)];
-                        // movement::followPath(&robot, path, 100000, 0.7, PI/2.0, 90.0, lCons, rCons);
+                        let path = vec![(398.32422, 153.41406), (559.21094, 99.73828), (810.08594, 135.30078), (932.33984, 164.47266), (1003.5625, 239.64063), (991.8906, 394.1797), (903.0703, 482.3047), (853.76953, 604.375), (726.21094, 601.0117), (516.59375, 587.25), (504.28125, 469.16797)];
+
+                        // movement::followPath(&robot, path, 100000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
+                        movement::moveToPurePursuit(&robot, path, 80.0, 2, 1400);
                     });
                 }
             }

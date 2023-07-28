@@ -26,9 +26,16 @@ impl ui::Ui {
                         self.path[i] = mouse_position().clone();
                         self.editing = i as i8;
                     }
+
                     else {
                         self.editing = -1;
                     }
+
+                    if is_key_pressed(KeyCode::Backspace) {
+                        self.path.remove(i);
+                        break;
+                    }
+
                 }
                 else {draw_circle(self.path[i].0, self.path[i].1, 4.0, RED)}
             }
