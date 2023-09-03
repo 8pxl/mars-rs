@@ -5,6 +5,7 @@ use macroquad::shapes::draw_line;
 use crate::robot;
 use crate::util;
 use crate::util::absoluteAngleToPoint;
+use crate::paths;
 use std::f32::consts::PI;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -233,13 +234,14 @@ pub fn moveToPurePursuit(robot: &Arc<Mutex<robot::Robot>>, path: Vec<(f32,f32)>,
             let pos = robot.position;
             let last = path[path.len() - 1];
             let target;
-            start = Instant::now();
 
             if lineIndex == path.len() - 2 {
                 target = last;
             }
             
             else {
+                start = Instant::now();
+
                 let targ = targetPoint(&path, pos, lookAhead, lineLookAhead, lineIndex);
                 
                 match targ {
@@ -256,12 +258,56 @@ pub fn moveToPurePursuit(robot: &Arc<Mutex<robot::Robot>>, path: Vec<(f32,f32)>,
 
             let heading = robot.heading.to_degrees() % 360.0;
             robot.step(pidMTPVel(pos, heading, target, 90.0, &mut lCont, &mut rCont, 0.0));
-            use macroquad::prelude::BLACK;
-            draw_line(pos.0, pos.1, target.0, target.1, 2.0, BLACK);
+            // use macroquad::prelude::BLACK;
+            // draw_line(pos.0, pos.1, target.0, target.1, 2.0, BLACK);
         }
 
         thread::sleep(Duration::from_millis(10));
-
     }
     // moveTo(path[-1],finalTimeout)
 }
+
+pub fn bezier2dMotionProfile(path: paths::Bezier, maxSpeed: f32, accel: f32, decel: f32, resolution: i32, track: f32) {
+    let len = path.length();
+    let max = ((2.0 * accel * decel * len) / (accel + decel)).sqrt().min(maxSpeed);
+    let accelTime = max / accel;
+    let decelTime = max / decel;
+    let accelDist = (max / 2.0) * accelTime;
+    let decelDist = (max / 2.0) * decelTime;
+
+    let mut profile: Vec<f32> = Vec::new();
+    let mut dist = 0.0;
+    let mut t = 0.0;
+    while dist < len {
+        
+        let curvature = path.curvature(t);
+        if dist > len {
+            dist = len;
+        }
+        let mut vel = 
+            if dist < accelDist {
+                (2.0 * accel * dist).sqrt()
+            }
+
+            else if dist < (len - decelDist) {
+                max
+            }
+            
+            else {
+                max.powi(2) + 2.0 * decel * dist
+            };
+        let left = (vel * (2.0 + (curvature * track))) / 2.0;
+        let right = (vel * (2.0 - (curvature * track))) / 2.0;
+        if left.max(right) > (2.0 * maxSpeed - left.min(right)) {
+
+        }
+    }
+}
+
+
+// double max = std::min(std::sqrt((2 * accel * decel * dist) / accel + decel), maxSpeed);
+// double accelTime = max / accel;
+// double decelTime = max / decel;
+// double coastDist = (dist / max) - (max / (2 * accel)) - (max / (2*decel));
+// double coastTime = coastDist / max;
+// double totalTime = accelTime + decelTime + coastTime;

@@ -23,6 +23,7 @@ pub fn drive(vel: &mut(f32, f32), robot: &mut super::robot::Robot) {
     }
     if is_key_down(KeyCode::A) { 
         vel.1 += 0.2 * -sgnv1;
+        // vel.0 -= 0.2 * -sgnv1;
     }
     if is_key_down(KeyCode::S) { 
         vel.0 -= 0.2;
@@ -30,6 +31,7 @@ pub fn drive(vel: &mut(f32, f32), robot: &mut super::robot::Robot) {
     }
     if is_key_down(KeyCode::D) { 
         vel.0 += 0.2 * -sgnv;
+        // vel.1 -= 0.2 * -sgnv;
     }
 
     robot.step(*vel);

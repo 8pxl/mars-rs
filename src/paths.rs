@@ -76,3 +76,17 @@ impl ui::Ui {
         }
     }
 }
+
+pub struct Bezier {
+    pub points: (f32, f32, f32, f32)
+}
+
+impl Bezier {
+    pub fn length(&self) -> f32 {
+        0.0
+    }
+
+    pub fn curvature(&self, t: f32) -> f32 {
+        0.0
+    }
+}
