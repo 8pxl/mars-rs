@@ -84,16 +84,16 @@ async fn main() {
             ui::State::Auton => {
                 if !autonStarted {
                     autonStarted = true;
-                    thread::spawn(move || {
-                        // movement::pidMTP(&robot, (width / 2.0, height / 2.0), 115.0, 800, lCons, rCons, 10.0);
-                        // movement::boomerang(&robot, (width - width / 8.0, height - height/ 6.0), 40000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
-                        // movement::boomerang(&robot, (width/2.0, height/2.0 - 330.0), 5000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
-                        // movement::eulerTurn(&robot, 0.0, -0.0002, movement::eulerTurn(&robot, 45.0, 0.0002, 0.0, 3000, 1, turnCons), 3000, -1, turnCons);
-                        // let path = vec![(398.32422, 153.41406), (559.21094, 99.73828), (810.08594, 135.30078), (932.33984, 164.47266), (1003.5625, 239.64063), (991.8906, 394.1797), (903.0703, 482.3047), (853.76953, 604.375), (726.21094, 601.0117), (516.59375, 587.25), (504.28125, 469.16797)];
+                    // thread::spawn(move || {
+                    //     // movement::pidMTP(&robot, (width / 2.0, height / 2.0), 115.0, 800, lCons, rCons, 10.0);
+                    //     // movement::boomerang(&robot, (width - width / 8.0, height - height/ 6.0), 40000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
+                    //     // movement::boomerang(&robot, (width/2.0, height/2.0 - 330.0), 5000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
+                    //     // movement::eulerTurn(&robot, 0.0, -0.0002, movement::eulerTurn(&robot, 45.0, 0.0002, 0.0, 3000, 1, turnCons), 3000, -1, turnCons);
+                    //     // let path = vec![(398.32422, 153.41406), (559.21094, 99.73828), (810.08594, 135.30078), (932.33984, 164.47266), (1003.5625, 239.64063), (991.8906, 394.1797), (903.0703, 482.3047), (853.76953, 604.375), (726.21094, 601.0117), (516.59375, 587.25), (504.28125, 469.16797)];
 
-                        // movement::followPath(&robot, path, 100000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
-                        movement::moveToPurePursuit(&robot, path, 80.0, 2, 1000);
-                    });
+                    //     // movement::followPath(&robot, path, 100000, 0.7, PI/2.0, 90.0, lCons, rCons, 0.0);
+                    //     movement::moveToPurePursuit(&robot, path, 80.0, 2, 1000);
+                    // });
                 }
             }
         }

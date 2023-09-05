@@ -6,6 +6,7 @@ use crate::robot;
 use crate::util;
 use crate::util::absoluteAngleToPoint;
 use crate::paths;
+use crate::util::dist;
 use std::f32::consts::PI;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -238,6 +239,12 @@ pub fn moveToPurePursuit(robot: &Arc<Mutex<robot::Robot>>, path: Vec<(f32,f32)>,
             if lineIndex == path.len() - 2 {
                 target = last;
             }
+            // println!("{:#?}", dist(last,pos));
+
+            // if dist(last, pos) < lookAhead && (lineIndex == path.len() - 2) {
+            //     target = last;
+                // print!("{:#?}", last);
+            // }
             
             else {
                 start = Instant::now();
